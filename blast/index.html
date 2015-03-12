@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8" />
+	
+	<title>BLAST a sequence get a tree</title>
+  
+    <style type="text/css">
+      body { margin: 20px; font-family:sans-serif;}
+      thead { font-size:10px;}
+      tbody { font-size:10px;}      
+    </style>
+    
+    <script type="text/javascript"
+      src="../js/jquery.js">
+    </script>
+
+    <script>
+    
+    //----------------------------------------------------------------------------------------------
+    // http://stackoverflow.com/a/7124052/9684
+	function htmlEscape(str) {
+		return String(str)
+				.replace(/&/g, '&amp;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;');
+	}    
+    
+    //----------------------------------------------------------------------------------------------
+    function show_delay(rid, value)
+    {	
+    	$("#countdown").html(value);
+    	
+    	value--;
+    	
+    	if (value > -1)
+    	{
+    		setTimeout('show_delay("' + rid + '",' + value + ')', 1000);
+    	}
+    	else
+    	{
+			// Now let's get the results
+			get_results(rid);
+	   	}
+   	
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    function blast()
+    {
+      	var query = $('#gi').val();
+      	
+		// Clear details
+		$("#hits").html('');
+		$("#map").html(''); 
+		$("#about_tree").html('');      	
+      	
+      	if (query == '')
+      	{
+      		$("#output").html('Please enter a GenBank accession number or GI number, such as <b>FJ559186</b>');   
+      	}
+      	else
+      	{      	
+			$("#output").html('Submitting BLAST job');      	
+			
+			$.getJSON('submit_blast.php?gi=' + query + "&callback=?",
+				function(data){
+					var html = '';
+					if (data.rid == 0)
+					{
+						html += 'Submission failed';
+						$("#output").html(html);
+					}
+					else
+					{
+						html += 'BLAST job <b>' + data.rid + '</b> expected to take ' + data.rtoe + ' seconds';
+						
+						html += '<br/><span id="countdown" style="font-size:100px;color:rgb(192,192,192);">' + data.rtoe + '</span>';
+						$("#output").html(html);
+						
+						// Now set a timer to count down
+						show_delay(data.rid, data.rtoe);					
+					}
+				}
+			);
+		}
+      }
+    
+    
+    //----------------------------------------------------------------------------------------------
+    function get_results(rid)
+    {
+    	//$("#output").html('<img src="images/indicator.gif" align="absmiddle" /> Checking status…');
+       	$.getJSON('poll_blast_results.php?rid=' + rid + "&callback=?",
+			function(data){
+				if (data.status)
+				{
+					$("#output").html('<img src="images/indicator.gif" align="absmiddle" /> ' + data.status);
+					
+					switch (data.status)
+					{
+						case 'WAITING':
+							get_results(rid);
+							break;
+							
+						case 'READY':
+							get_xml(rid);
+							break;
+							
+						default:
+							break;
+					}
+					
+				}
+				
+			}
+		);
+		return status;
+      }
+    
+
+    //----------------------------------------------------------------------------------------------
+    function get_xml(rid)
+    {
+    	$("#output").html('<img src="images/arrows.gif" align="absmiddle" />Fetching BLAST results from NCBI…');
+       	$.getJSON('get_blast_results.php?rid=' + rid + "&callback=?",
+			function(data){
+				if (data.xmlfile)
+				{
+					$("#output").html('<img src="images/paupcursor.gif" align="absmiddle" /> Making tree…');
+					maketree(rid);
+					
+					// display info on sequences
+					showhits(rid);					
+				}				
+			}
+		);
+		return status;
+      }
+    
+      
+    //----------------------------------------------------------------------------------------------
+    function maketree(rid)
+    {
+       	$.getJSON('maketree.php?rid=' + rid + "&callback=?",
+			function(data){
+				if (data.tree_url)
+				{
+					showtree('http://iphylo.org/~rpage/phyloinformatics/blast/' + data.tree_url);
+					
+					var html = '';
+					html += '<a href="tmp/' + rid + '.nex" target="_new"><img src="images/nexus.png" border="0" align="absmiddle" />Alignment</a> ';
+					html += '<a href="tmp/' + rid + '.tre" target="_new"><img src="images/treeview.png" border="0" align="absmiddle" />Tree</a> ';
+					html += '<a href="../services/tree_url_svg.php?url=http://iphylo.org/~rpage/phyloinformatics/blast/' + data.tree_url + '" target="_new"><img src="images/inkscape.png" border="0" align="absmiddle">SVG</a>';
+					$('#about_tree').html(html);
+					
+				}
+				
+			}
+		);
+    }
+
+    //----------------------------------------------------------------------------------------------
+	function showtree(url)
+	{
+		$('#output').load('../services/tree_url_svg.php?url=' + url);		
+	}
+	
+    //----------------------------------------------------------------------------------------------
+    function showhits(rid)
+    {
+       	$.getJSON('get_hits.php?rid=' + rid + "&callback=?",
+			function(data){
+				if (data.sequences)
+				{
+					var html = '<table>';
+					html += '<thead>';
+					html += '<tr><th>Accession</th><th>Organism</th><th>Voucher</th><th>Host</th><th>Date</th><th>Reference</th><th>PMID</th><th>DOI</th><th>Coordinates</th></tr>';
+					html += '</thead>';
+					html += '<tbody>';
+					for (var i in data.sequences)
+					{
+						html += '<tr>';
+						
+						html += '<td>';
+						html += '<a href="http://www.ncbi.nlm.nih.gov/nuccore/' + data.sequences[i].accession + '" target="_new">' + data.sequences[i].accession + '</a>'
+						html += '</td>';
+						
+						html += '<td>';
+						html += '<a href="http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=' + data.sequences[i].source.tax_id + '" target="_new">';
+						html += data.sequences[i].organism;
+						html += '</a>';
+						html += '</td>';						
+						
+						if (data.sequences[i].source.specimen_voucher)
+						{
+							html += '<td>';
+							html += htmlEscape(data.sequences[i].source.specimen_voucher);
+							html += '</td>';
+						}
+						else
+						{
+							html += '<td></td>';
+						}
+						
+						
+						if (data.sequences[i].source.host)
+						{
+							html += '<td>';
+							html += data.sequences[i].source.host;
+							html += '</td>';
+						}
+						else
+						{
+							html += '<td></td>';
+						}
+						
+						html += '<td>';
+						html += data.sequences[i].created;
+						html += '</td>';			
+						
+						html += '<td>';
+						html += data.sequences[i].references[0].title;
+						
+						if (data.sequences[i].references[0].identifiers)
+						{
+							if (data.sequences[i].references[0].identifiers.pmid)
+							{
+								html += '<td><a href="http://www.ncbi.nlm.nih.gov/pubmed/' + data.sequences[i].references[0].identifiers.pmid + '" target="_new">' + data.sequences[i].references[0].identifiers.pmid + '</a></td>';
+							}
+							else
+							{
+								html += '<td></td>';
+							}
+							if (data.sequences[i].references[0].identifiers.doi)
+							{
+								html += '<td><a href="http://dx.doi.org/' + data.sequences[i].references[0].identifiers.doi + '" target="_new">' + data.sequences[i].references[0].identifiers.doi + '</a></td>';
+							}
+							else
+							{
+								html += '<td></td>';
+							}
+						}
+						else
+						{
+							html += '<td></td>';
+							html += '<td></td>';
+						}
+						
+						
+						html += '</td>';
+						
+						if (data.sequences[i].source.latitude)
+						{
+							html += '<td>';
+							html += data.sequences[i].source.latitude;
+							html += ',';
+							html += data.sequences[i].source.longitude;
+							html += '</td>';						
+						}
+						else
+						{
+							html += '<td></td>';
+						}
+
+						
+						html += '</tr>';
+					}
+					html += '</tbody>';
+					html += '</table>';
+					$("#hits").html(html);
+					
+					//alert(JSON.stringify(data.geometry.coordinates));
+					
+					if (data.geometry.coordinates.length > 0)
+					{
+						//alert(JSON.stringify(data.geometry.coordinates));
+						
+						html = '<object id="mysvg" type="image/svg+xml" width="360" height="180" data="' + 'map.php?coordinates=' + encodeURIComponent(JSON.stringify(data.geometry.coordinates)) + '" />'
+								+ '</object>';
+								
+						//alert(html);
+						
+						$("#map").html(html);
+					}
+				}
+				
+			}
+		);
+    }
+	
+	
+    </script>
+  </head>
+  <body>
+  	<h1>BLAST sequence and make tree</h1>
+  	<p>Construct a tree from the sequences most similar to known sequence in GenBank.</p>
+   	<div style="position:relative;height:540px;">
+  		<p>Enter accession number or GI of target sequence:</p>
+  		<input type="text" id="gi" value="" placeholder="FJ559186"> 		
+  		<button onclick="blast();">BLAST</button>
+   	 	<div id="map" style="position:absolute;left:0px;top:100px;width:360px;height:180px;"></div>
+  	    
+  	    <div id="about_tree" style="position:absolute;width:700px;height:40px;top:0px;left:400px;text-align:right;"></div>
+		<div id="output" style="position:absolute;width:700px;height:500px;top:40px;left:400px;overflow:auto;">
+  	   
+  	   </div>
+  	</div>
+  	<div id="hits" style=""></div>
+  	
+  </body>
+</html>

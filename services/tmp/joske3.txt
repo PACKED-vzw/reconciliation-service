@@ -1,0 +1,4 @@
+Array
+(
+    [queries] => {"q0":{"query":"Schelfhout, Andreas","limit":3},"q1":{"query":"Anonieme meester","limit":3},"q2":{"query":"Pourbus, Pieter","limit":3},"q3":{"query":"Isenbrant, Adriaen","limit":3},"q4":{"query":"Cuyck de Myerhop, Frans van","limit":3},"q5":{"query":"Adriaenssen, Alexander","limit":3},"q6":{"query":"Crayer, Gaspar de","limit":3},"q7":{"query":"Kinsoen, Franciscus Josephus","limit":3},"q8":{"query":"Oost, Jacob I van","limit":3},"q9":{"query":"Bossuet, François Antoine","limit":3}}
+)

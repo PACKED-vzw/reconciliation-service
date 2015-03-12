@@ -1,0 +1,1 @@
+http://viaf.org/viaf/search?query=local.personalNames+all+gangu000bschenking+PMMK&httpAccept=application%2Frss%2Bxml

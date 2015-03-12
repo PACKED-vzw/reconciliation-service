@@ -1,0 +1,4 @@
+Array
+(
+    [queries] => {"q0":{"query":"Foestrau, L.","type":"/people/person","type_strict":"should"},"q1":{"query":"Adriaensen, Alexander","type":"/people/person","type_strict":"should"}}
+)

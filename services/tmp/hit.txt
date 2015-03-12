@@ -1,0 +1,7 @@
+stdClass Object
+(
+    [score] => 1
+    [match] => 
+    [name] => Gómez Rodríguez, Jesús Amador
+    [id] => 228745502
+)

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:cluster="http://viaf.org/viaf/terms#" xmlns:xq="http://www.loc.gov/zing/cql/xcql/" xmlns:srw="http://www.loc.gov/zing/srw/" version="2.0">
+<channel>
+<title>VIAF Search: local.personalNames+all+gangu000bschenking+PMMK</title>
+<link>http://viaf.org/viaf/search?query=local.personalNames+all+gangu000bschenking+PMMK&amp;version=1.1&amp;maximumRecords=100&amp;operation=searchRetrieve&amp;stylesheet=xsl/results.xsl&amp;sortKeys=holdingscount&amp;http:accept=application/rss%2bxml</link>
+<description>VIAF: Results of search: local.personalNames+all+gangu000bschenking+PMMK</description>
+<opensearch:totalResults>0</opensearch:totalResults>
+<opensearch:startIndex/>
+<opensearch:itemsPerPage>0</opensearch:itemsPerPage>
+<opensearch:link type="application/opensearchdescription+xml" href="http://viaf.org/allFieldsSearch.xml" rel="search"/>
+<opensearch:Query searchTerms="local.personalNames+all+gangu000bschenking+PMMK" role="request"/>
+</channel>
+</rss>
